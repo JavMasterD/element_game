@@ -1,0 +1,659 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>لعبة رموز العناصر</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;900&family=Cairo:wght@700;800;900&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: #0b1220;
+    --bg-2: #101a2e;
+    --surface: #16213b;
+    --surface-2: #1c2b4a;
+    --line: #2a3c60;
+    --text: #eaf0fb;
+    --muted: #8fa3c7;
+    --cyan: #4fd8c9;
+    --amber: #f5b83d;
+    --violet: #b48cf2;
+    --good: #57e08c;
+    --bad: #f16d6d;
+
+    --c-alkali: #f5875a;
+    --c-alkaline: #f5b83d;
+    --c-transition: #4fb8f5;
+    --c-post: #6fd8c9;
+    --c-metalloid: #b48cf2;
+    --c-nonmetal: #57e08c;
+    --c-halogen: #f16d9e;
+    --c-noble: #8fa3c7;
+    --c-actinide: #e0e06a;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    min-height:100vh;
+    background:
+      radial-gradient(circle at 15% 10%, rgba(79,216,201,0.08), transparent 40%),
+      radial-gradient(circle at 85% 85%, rgba(180,140,242,0.08), transparent 40%),
+      var(--bg);
+    color:var(--text);
+    font-family:'Tajawal', sans-serif;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:20px;
+  }
+  .stage{
+    width:100%;
+    max-width:520px;
+  }
+
+  /* ---------- Header ---------- */
+  .brand{
+    text-align:center;
+    margin-bottom:18px;
+  }
+  .brand .eyebrow{
+    font-family:'Cairo', sans-serif;
+    font-size:12px;
+    letter-spacing:2px;
+    color:var(--muted);
+    text-transform:uppercase;
+  }
+  .brand h1{
+    font-family:'Cairo', sans-serif;
+    font-weight:900;
+    font-size:28px;
+    margin:4px 0 0;
+    background:linear-gradient(90deg, var(--cyan), var(--violet));
+    -webkit-background-clip:text;
+    background-clip:text;
+    color:transparent;
+  }
+
+  /* ---------- Screens ---------- */
+  .screen{ display:none; }
+  .screen.active{ display:block; animation:fadeIn .35s ease; }
+  @keyframes fadeIn{ from{opacity:0; transform:translateY(6px);} to{opacity:1; transform:translateY(0);} }
+
+  .panel{
+    background:linear-gradient(160deg, var(--surface), var(--bg-2));
+    border:1px solid var(--line);
+    border-radius:20px;
+    padding:26px;
+    box-shadow: 0 20px 50px rgba(0,0,0,0.35);
+  }
+
+  .lead{ color:var(--muted); font-size:15px; line-height:1.8; text-align:center; margin:0 0 22px; }
+
+  .choice-group{ display:flex; flex-direction:column; gap:10px; margin-bottom:18px; }
+  .choice-group .label{
+    font-family:'Cairo', sans-serif;
+    font-weight:700;
+    font-size:13px;
+    color:var(--cyan);
+    margin-bottom:2px;
+  }
+  .opt-row{ display:flex; gap:10px; }
+  .opt{
+    flex:1;
+    background:var(--surface-2);
+    border:1.5px solid var(--line);
+    color:var(--text);
+    border-radius:12px;
+    padding:14px 10px;
+    font-family:'Tajawal', sans-serif;
+    font-weight:700;
+    font-size:14px;
+    cursor:pointer;
+    transition: all .15s ease;
+    text-align:center;
+  }
+  .opt:hover{ border-color:var(--cyan); transform:translateY(-2px); }
+  .opt.selected{ border-color:var(--cyan); background:rgba(79,216,201,0.12); box-shadow:0 0 0 2px rgba(79,216,201,0.25) inset; }
+
+  .btn-primary{
+    width:100%;
+    background:linear-gradient(90deg, var(--cyan), #38b8c9);
+    color:#06251f;
+    border:none;
+    border-radius:14px;
+    padding:16px;
+    font-family:'Cairo', sans-serif;
+    font-weight:800;
+    font-size:17px;
+    cursor:pointer;
+    transition: transform .15s ease, box-shadow .15s ease;
+    box-shadow:0 10px 25px rgba(79,216,201,0.25);
+  }
+  .btn-primary:hover{ transform:translateY(-2px); box-shadow:0 14px 30px rgba(79,216,201,0.35); }
+  .btn-primary:active{ transform:translateY(0); }
+
+  .btn-ghost{
+    width:100%;
+    background:transparent;
+    color:var(--muted);
+    border:1.5px solid var(--line);
+    border-radius:14px;
+    padding:13px;
+    font-family:'Tajawal', sans-serif;
+    font-weight:700;
+    font-size:14px;
+    cursor:pointer;
+    margin-top:10px;
+    transition:all .15s ease;
+  }
+  .btn-ghost:hover{ color:var(--text); border-color:var(--cyan); }
+
+  /* ---------- Game HUD ---------- */
+  .hud{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom:16px;
+    font-family:'Cairo', sans-serif;
+  }
+  .hud-item{ text-align:center; }
+  .hud-item .num{ font-size:20px; font-weight:800; }
+  .hud-item .cap{ font-size:10px; color:var(--muted); letter-spacing:1px; }
+  .hearts{ font-size:16px; letter-spacing:3px; }
+
+  .timerbar{
+    height:6px;
+    border-radius:6px;
+    background:var(--surface-2);
+    overflow:hidden;
+    margin-bottom:22px;
+  }
+  .timerbar-fill{
+    height:100%;
+    width:100%;
+    background:linear-gradient(90deg, var(--cyan), var(--amber));
+    transition: width .1s linear;
+  }
+
+  /* ---------- Element tile (signature) ---------- */
+  .tile-wrap{ display:flex; justify-content:center; margin-bottom:24px; perspective:800px; }
+  .tile{
+    width:170px;
+    height:170px;
+    border-radius:18px;
+    border:2px solid var(--line);
+    background: var(--cat-color, var(--surface-2));
+    background: linear-gradient(160deg, color-mix(in srgb, var(--cat-color) 22%, var(--surface-2)), var(--surface-2));
+    position:relative;
+    display:flex;
+    flex-direction:column;
+    justify-content:space-between;
+    padding:14px;
+    transition: transform .4s ease, box-shadow .3s ease;
+    box-shadow: 0 0 0 rgba(0,0,0,0);
+  }
+  .tile.correct{ border-color:var(--good); box-shadow:0 0 30px rgba(87,224,140,0.35); animation:pulseGood .5s ease; }
+  .tile.wrong{ border-color:var(--bad); box-shadow:0 0 30px rgba(241,109,109,0.35); animation:shake .4s ease; }
+  @keyframes pulseGood{ 0%{transform:scale(1);} 50%{transform:scale(1.06);} 100%{transform:scale(1);} }
+  @keyframes shake{ 0%,100%{transform:translateX(0);} 25%{transform:translateX(-6px);} 75%{transform:translateX(6px);} }
+
+  .tile .atomic-num{ font-family:'Cairo', sans-serif; font-size:13px; color:var(--muted); font-weight:700; }
+  .tile .symbol-big{ font-family:'Cairo', sans-serif; font-size:56px; font-weight:900; text-align:center; line-height:1; color:var(--text); }
+  .tile .cat-tag{ font-size:10px; color:var(--muted); text-align:center; letter-spacing:1px; }
+
+  .question-label{
+    text-align:center;
+    color:var(--muted);
+    font-size:13px;
+    margin-bottom:16px;
+    font-weight:700;
+  }
+
+  .answers{ display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+  .answer-btn{
+    background:var(--surface-2);
+    border:1.5px solid var(--line);
+    color:var(--text);
+    border-radius:14px;
+    padding:18px 8px;
+    font-family:'Tajawal', sans-serif;
+    font-weight:700;
+    font-size:16px;
+    cursor:pointer;
+    transition: all .15s ease;
+  }
+  .answer-btn:hover:not(:disabled){ border-color:var(--cyan); transform:translateY(-2px); }
+  .answer-btn:disabled{ cursor:default; }
+  .answer-btn.correct{ background:rgba(87,224,140,0.15); border-color:var(--good); color:var(--good); }
+  .answer-btn.wrong{ background:rgba(241,109,109,0.15); border-color:var(--bad); color:var(--bad); }
+
+  /* ---------- Result screen ---------- */
+  .result-emoji{ font-size:56px; text-align:center; margin-bottom:6px; }
+  .result-title{ font-family:'Cairo', sans-serif; font-weight:800; font-size:22px; text-align:center; margin-bottom:4px; }
+  .result-sub{ text-align:center; color:var(--muted); font-size:14px; margin-bottom:22px; }
+  .stat-row{ display:flex; justify-content:space-around; margin-bottom:22px; }
+  .stat-box{ text-align:center; }
+  .stat-box .v{ font-family:'Cairo', sans-serif; font-weight:800; font-size:24px; color:var(--cyan); }
+  .stat-box .l{ font-size:11px; color:var(--muted); }
+
+  .review-list{ max-height:170px; overflow-y:auto; margin-bottom:18px; }
+  .review-item{
+    display:flex; justify-content:space-between; align-items:center;
+    padding:8px 10px; border-radius:10px; margin-bottom:6px;
+    background:var(--surface-2); font-size:13px;
+  }
+  .review-item.miss{ border-right:3px solid var(--bad); }
+  .review-item.hit{ border-right:3px solid var(--good); }
+
+  .footer-note{ text-align:center; color:var(--muted); font-size:11px; margin-top:16px; }
+</style>
+</head>
+<body>
+
+<div class="stage">
+  <div class="brand">
+    <div class="eyebrow">Chemistry Lab · مستر أحمد</div>
+    <h1>⚗️ لعبة رموز العناصر</h1>
+  </div>
+
+  <!-- ============ START SCREEN ============ -->
+  <div class="screen active" id="screen-start">
+    <div class="panel">
+      <p class="lead">اختبر معلوماتك في رموز العناصر الكيميائية بطريقة سريعة وممتعة. 3 محاولات، وقت محدود لكل سؤال، وتحدي مع نفسك لتحسين رصيدك.</p>
+
+      <div class="choice-group">
+        <div class="label">🎯 اتجاه اللعبة</div>
+        <div class="opt-row">
+          <button class="opt selected" data-group="mode" data-value="symbolToName">من الرمز للاسم</button>
+          <button class="opt" data-group="mode" data-value="nameToSymbol">من الاسم للرمز</button>
+        </div>
+        <div class="opt-row">
+          <button class="opt" data-group="mode" data-value="mixed" style="flex:1;">🔀 وضع مختلط</button>
+        </div>
+      </div>
+
+      <div class="choice-group">
+        <div class="label">📚 مستوى الصعوبة</div>
+        <div class="opt-row">
+          <button class="opt selected" data-group="level" data-value="easy">أساسي (20 عنصر)</button>
+          <button class="opt" data-group="level" data-value="hard">شامل (35 عنصر)</button>
+        </div>
+      </div>
+
+      <div class="choice-group">
+        <div class="label">⏱️ عدد الأسئلة</div>
+        <div class="opt-row">
+          <button class="opt" data-group="qcount" data-value="10">10 أسئلة</button>
+          <button class="opt selected" data-group="qcount" data-value="15">15 سؤال</button>
+          <button class="opt" data-group="qcount" data-value="20">20 سؤال</button>
+        </div>
+      </div>
+
+      <button class="btn-primary" id="btn-start">ابدأ اللعب 🚀</button>
+    </div>
+  </div>
+
+  <!-- ============ GAME SCREEN ============ -->
+  <div class="screen" id="screen-game">
+    <div class="panel">
+      <div class="hud">
+        <div class="hud-item">
+          <div class="num" id="hud-score">0</div>
+          <div class="cap">النقاط</div>
+        </div>
+        <div class="hud-item">
+          <div class="hearts" id="hud-lives">❤️❤️❤️</div>
+          <div class="cap">المحاولات</div>
+        </div>
+        <div class="hud-item">
+          <div class="num" id="hud-progress">1/15</div>
+          <div class="cap">السؤال</div>
+        </div>
+      </div>
+
+      <div class="timerbar"><div class="timerbar-fill" id="timer-fill"></div></div>
+
+      <div class="question-label" id="question-label">ما اسم هذا العنصر؟</div>
+
+      <div class="tile-wrap">
+        <div class="tile" id="tile">
+          <div class="atomic-num" id="tile-num">1</div>
+          <div class="symbol-big" id="tile-symbol">H</div>
+          <div class="cat-tag" id="tile-cat">فلز قلوي</div>
+        </div>
+      </div>
+
+      <div class="answers" id="answers-grid">
+        <!-- injected -->
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ RESULT SCREEN ============ -->
+  <div class="screen" id="screen-result">
+    <div class="panel">
+      <div class="result-emoji" id="result-emoji">🏆</div>
+      <div class="result-title" id="result-title">أحسنت!</div>
+      <div class="result-sub" id="result-sub">إليك ملخص أدائك</div>
+
+      <div class="stat-row">
+        <div class="stat-box"><div class="v" id="stat-score">0</div><div class="l">النقاط</div></div>
+        <div class="stat-box"><div class="v" id="stat-correct">0</div><div class="l">إجابات صحيحة</div></div>
+        <div class="stat-box"><div class="v" id="stat-streak">0</div><div class="l">أفضل سلسلة</div></div>
+      </div>
+
+      <div class="review-list" id="review-list"></div>
+
+      <button class="btn-primary" id="btn-again">العب مرة أخرى 🔁</button>
+      <button class="btn-ghost" id="btn-menu">القائمة الرئيسية</button>
+    </div>
+  </div>
+
+  <div class="footer-note">صُمم لتعليم رموز العناصر بشكل تفاعلي 🧪</div>
+</div>
+
+<script>
+(function(){
+
+  // ---------- Data ----------
+  const ELEMENTS = [
+    {sym:'H', name:'الهيدروجين', num:1, cat:'nonmetal', catName:'لا فلز'},
+    {sym:'He', name:'الهيليوم', num:2, cat:'noble', catName:'غاز نبيل'},
+    {sym:'Li', name:'الليثيوم', num:3, cat:'alkali', catName:'فلز قلوي'},
+    {sym:'Be', name:'البريليوم', num:4, cat:'alkaline', catName:'فلز قلوي ترابي'},
+    {sym:'B', name:'البورون', num:5, cat:'metalloid', catName:'شبه فلز'},
+    {sym:'C', name:'الكربون', num:6, cat:'nonmetal', catName:'لا فلز'},
+    {sym:'N', name:'النيتروجين', num:7, cat:'nonmetal', catName:'لا فلز'},
+    {sym:'O', name:'الأكسجين', num:8, cat:'nonmetal', catName:'لا فلز'},
+    {sym:'F', name:'الفلور', num:9, cat:'halogen', catName:'هالوجين'},
+    {sym:'Ne', name:'النيون', num:10, cat:'noble', catName:'غاز نبيل'},
+    {sym:'Na', name:'الصوديوم', num:11, cat:'alkali', catName:'فلز قلوي'},
+    {sym:'Mg', name:'الماغنسيوم', num:12, cat:'alkaline', catName:'فلز قلوي ترابي'},
+    {sym:'Al', name:'الألومنيوم', num:13, cat:'post', catName:'فلز انتقالي بعدي'},
+    {sym:'Si', name:'السيليكون', num:14, cat:'metalloid', catName:'شبه فلز'},
+    {sym:'P', name:'الفوسفور', num:15, cat:'nonmetal', catName:'لا فلز'},
+    {sym:'S', name:'الكبريت', num:16, cat:'nonmetal', catName:'لا فلز'},
+    {sym:'Cl', name:'الكلور', num:17, cat:'halogen', catName:'هالوجين'},
+    {sym:'Ar', name:'الأرجون', num:18, cat:'noble', catName:'غاز نبيل'},
+    {sym:'K', name:'البوتاسيوم', num:19, cat:'alkali', catName:'فلز قلوي'},
+    {sym:'Ca', name:'الكالسيوم', num:20, cat:'alkaline', catName:'فلز قلوي ترابي'},
+    {sym:'Ti', name:'التيتانيوم', num:22, cat:'transition', catName:'فلز انتقالي'},
+    {sym:'Cr', name:'الكروم', num:24, cat:'transition', catName:'فلز انتقالي'},
+    {sym:'Mn', name:'المنجنيز', num:25, cat:'transition', catName:'فلز انتقالي'},
+    {sym:'Fe', name:'الحديد', num:26, cat:'transition', catName:'فلز انتقالي'},
+    {sym:'Ni', name:'النيكل', num:28, cat:'transition', catName:'فلز انتقالي'},
+    {sym:'Cu', name:'النحاس', num:29, cat:'transition', catName:'فلز انتقالي'},
+    {sym:'Zn', name:'الزنك', num:30, cat:'transition', catName:'فلز انتقالي'},
+    {sym:'Br', name:'البروم', num:35, cat:'halogen', catName:'هالوجين'},
+    {sym:'Ag', name:'الفضة', num:47, cat:'transition', catName:'فلز انتقالي'},
+    {sym:'Sn', name:'القصدير', num:50, cat:'post', catName:'فلز انتقالي بعدي'},
+    {sym:'I', name:'اليود', num:53, cat:'halogen', catName:'هالوجين'},
+    {sym:'Pt', name:'البلاتين', num:78, cat:'transition', catName:'فلز انتقالي'},
+    {sym:'Au', name:'الذهب', num:79, cat:'transition', catName:'فلز انتقالي'},
+    {sym:'Hg', name:'الزئبق', num:80, cat:'transition', catName:'فلز انتقالي'},
+    {sym:'Pb', name:'الرصاص', num:82, cat:'post', catName:'فلز انتقالي بعدي'},
+    {sym:'U', name:'اليورانيوم', num:92, cat:'actinide', catName:'أكتينيدي'}
+  ];
+
+  const CAT_COLOR = {
+    alkali:'var(--c-alkali)', alkaline:'var(--c-alkaline)', transition:'var(--c-transition)',
+    post:'var(--c-post)', metalloid:'var(--c-metalloid)', nonmetal:'var(--c-nonmetal)',
+    halogen:'var(--c-halogen)', noble:'var(--c-noble)', actinide:'var(--c-actinide)'
+  };
+
+  const EASY_SYMS = ['H','He','Li','C','N','O','F','Ne','Na','Mg','Al','Si','P','S','Cl','Ar','K','Ca','Fe','Cu'];
+
+  // ---------- State ----------
+  let settings = { mode:'symbolToName', level:'easy', qcount:15 };
+  let pool = [];
+  let questions = [];
+  let qIndex = 0;
+  let score = 0;
+  let lives = 3;
+  let correctCount = 0;
+  let streak = 0;
+  let bestStreak = 0;
+  let review = [];
+  let timerInterval = null;
+  let timeLeft = 0;
+  const TIME_PER_Q = 12; // seconds
+  let answered = false;
+
+  // ---------- DOM refs ----------
+  const screens = {
+    start: document.getElementById('screen-start'),
+    game: document.getElementById('screen-game'),
+    result: document.getElementById('screen-result')
+  };
+
+  function showScreen(name){
+    Object.values(screens).forEach(s => s.classList.remove('active'));
+    screens[name].classList.add('active');
+  }
+
+  // ---------- Option selectors on start screen ----------
+  document.querySelectorAll('.opt').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const group = btn.dataset.group;
+      document.querySelectorAll(`.opt[data-group="${group}"]`).forEach(b=>b.classList.remove('selected'));
+      btn.classList.add('selected');
+      settings[group] = isNaN(btn.dataset.value) ? btn.dataset.value : btn.dataset.value;
+    });
+  });
+
+  document.getElementById('btn-start').addEventListener('click', startGame);
+  document.getElementById('btn-again').addEventListener('click', ()=>{ showScreen('start'); });
+  document.getElementById('btn-menu').addEventListener('click', ()=>{ showScreen('start'); });
+
+  function startGame(){
+    pool = settings.level === 'easy' ? ELEMENTS.filter(e=>EASY_SYMS.includes(e.sym)) : ELEMENTS.slice();
+    const qc = parseInt(settings.qcount, 10);
+    questions = shuffle(pool.slice()).slice(0, Math.min(qc, pool.length));
+    // pad if needed by reshuffling with repeats (only if qcount > pool length)
+    while(questions.length < qc){
+      questions.push(pool[Math.floor(Math.random()*pool.length)]);
+    }
+    qIndex = 0; score = 0; lives = 3; correctCount = 0; streak = 0; bestStreak = 0; review = [];
+    document.getElementById('hud-score').textContent = '0';
+    updateLives();
+    showScreen('game');
+    renderQuestion();
+  }
+
+  function shuffle(arr){
+    for(let i=arr.length-1;i>0;i--){
+      const j = Math.floor(Math.random()*(i+1));
+      [arr[i],arr[j]]=[arr[j],arr[i]];
+    }
+    return arr;
+  }
+
+  function currentMode(){
+    if(settings.mode === 'mixed'){
+      return Math.random() < 0.5 ? 'symbolToName' : 'nameToSymbol';
+    }
+    return settings.mode;
+  }
+
+  function renderQuestion(){
+    answered = false;
+    const el = questions[qIndex];
+    const mode = currentMode();
+    questions[qIndex]._mode = mode; // store for review
+
+    document.getElementById('hud-progress').textContent = `${qIndex+1}/${questions.length}`;
+
+    const tile = document.getElementById('tile');
+    tile.className = 'tile';
+    tile.style.setProperty('--cat-color', CAT_COLOR[el.cat]);
+    document.getElementById('tile-num').textContent = el.num;
+    document.getElementById('tile-cat').textContent = el.catName;
+
+    const label = document.getElementById('question-label');
+    const symbolBig = document.getElementById('tile-symbol');
+
+    let correctAnswer, wrongPool, formatFn;
+    if(mode === 'symbolToName'){
+      label.textContent = 'ما اسم هذا العنصر؟';
+      symbolBig.textContent = el.sym;
+      symbolBig.style.fontSize = '56px';
+      correctAnswer = el.name;
+      wrongPool = pool.filter(p=>p.sym!==el.sym).map(p=>p.name);
+    } else {
+      label.textContent = 'ما رمز هذا العنصر؟';
+      symbolBig.textContent = el.name;
+      symbolBig.style.fontSize = '26px';
+      correctAnswer = el.sym;
+      wrongPool = pool.filter(p=>p.sym!==el.sym).map(p=>p.sym);
+    }
+
+    const wrongs = shuffle(wrongPool).slice(0,3);
+    const options = shuffle([correctAnswer, ...wrongs]);
+
+    const grid = document.getElementById('answers-grid');
+    grid.innerHTML = '';
+    options.forEach(opt=>{
+      const b = document.createElement('button');
+      b.className = 'answer-btn';
+      b.textContent = opt;
+      b.addEventListener('click', ()=> handleAnswer(b, opt, correctAnswer, el));
+      grid.appendChild(b);
+    });
+
+    startTimer();
+  }
+
+  function startTimer(){
+    clearInterval(timerInterval);
+    timeLeft = TIME_PER_Q * 10; // tenths of a second
+    const fill = document.getElementById('timer-fill');
+    fill.style.width = '100%';
+    timerInterval = setInterval(()=>{
+      timeLeft -= 1;
+      const pct = (timeLeft / (TIME_PER_Q*10)) * 100;
+      fill.style.width = Math.max(pct,0) + '%';
+      if(timeLeft <= 0){
+        clearInterval(timerInterval);
+        if(!answered) handleTimeout();
+      }
+    }, 100);
+  }
+
+  function handleTimeout(){
+    answered = true;
+    const el = questions[qIndex];
+    const mode = el._mode;
+    const correctAnswer = mode === 'symbolToName' ? el.name : el.sym;
+    document.getElementById('tile').classList.add('wrong');
+    streak = 0;
+    lives -= 1;
+    updateLives();
+    review.push({el, hit:false, mode});
+    revealAnswers(correctAnswer, null);
+    proceedAfterDelay();
+  }
+
+  function handleAnswer(btnEl, chosen, correctAnswer, el){
+    if(answered) return;
+    answered = true;
+    clearInterval(timerInterval);
+    const tile = document.getElementById('tile');
+    const mode = el._mode;
+
+    if(chosen === correctAnswer){
+      tile.classList.add('correct');
+      const gained = 10 + Math.min(streak*2, 20);
+      score += gained;
+      correctCount += 1;
+      streak += 1;
+      bestStreak = Math.max(bestStreak, streak);
+      review.push({el, hit:true, mode});
+    } else {
+      tile.classList.add('wrong');
+      streak = 0;
+      lives -= 1;
+      review.push({el, hit:false, mode});
+    }
+    document.getElementById('hud-score').textContent = score;
+    updateLives();
+    revealAnswers(correctAnswer, chosen);
+    proceedAfterDelay();
+  }
+
+  function revealAnswers(correctAnswer, chosen){
+    document.querySelectorAll('.answer-btn').forEach(b=>{
+      b.disabled = true;
+      if(b.textContent === correctAnswer) b.classList.add('correct');
+      else if(b.textContent === chosen) b.classList.add('wrong');
+    });
+  }
+
+  function updateLives(){
+    let hearts = '';
+    for(let i=0;i<3;i++) hearts += i < lives ? '❤️' : '🖤';
+    document.getElementById('hud-lives').textContent = hearts;
+  }
+
+  function proceedAfterDelay(){
+    setTimeout(()=>{
+      if(lives <= 0){
+        endGame();
+        return;
+      }
+      qIndex += 1;
+      if(qIndex >= questions.length){
+        endGame();
+        return;
+      }
+      renderQuestion();
+    }, 1100);
+  }
+
+  function endGame(){
+    clearInterval(timerInterval);
+    const total = questions.length;
+    const emoji = document.getElementById('result-emoji');
+    const title = document.getElementById('result-title');
+    const sub = document.getElementById('result-sub');
+
+    let pct = correctCount / Math.max(qIndex + (lives<=0?1:0), 1);
+    if(lives <= 0){
+      emoji.textContent = '💔';
+      title.textContent = 'خلصت المحاولات!';
+      sub.textContent = `أجبت على ${correctCount} من ${qIndex+1} بشكل صحيح`;
+    } else if(correctCount === total){
+      emoji.textContent = '🥇';
+      title.textContent = 'إجابة مثالية!';
+      sub.textContent = 'حفظت كل الرموز صح، عمل رائع';
+    } else if(correctCount / total >= 0.7){
+      emoji.textContent = '🏆';
+      title.textContent = 'أداء ممتاز!';
+      sub.textContent = 'أنت قريب جدًا من الاحتراف';
+    } else {
+      emoji.textContent = '💪';
+      title.textContent = 'استمر في التدريب';
+      sub.textContent = 'كل محاولة بتقربك من الحفظ الكامل';
+    }
+
+    document.getElementById('stat-score').textContent = score;
+    document.getElementById('stat-correct').textContent = `${correctCount}/${lives<=0?qIndex+1:total}`;
+    document.getElementById('stat-streak').textContent = bestStreak;
+
+    const list = document.getElementById('review-list');
+    list.innerHTML = '';
+    review.forEach(r=>{
+      const div = document.createElement('div');
+      div.className = 'review-item ' + (r.hit ? 'hit' : 'miss');
+      const q = r.mode === 'symbolToName' ? r.el.sym : r.el.name;
+      const a = r.mode === 'symbolToName' ? r.el.name : r.el.sym;
+      div.innerHTML = `<span>${q} ← ${a}</span><span>${r.hit ? '✅' : '❌'}</span>`;
+      list.appendChild(div);
+    });
+
+    showScreen('result');
+  }
+
+})();
+</script>
+</body>
+</html>
